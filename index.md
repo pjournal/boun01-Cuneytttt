@@ -1,5 +1,5 @@
 ## My Progress
 
-[Homework 1 ](https://pjournal.github.io/boun01-Cuneytttt/firstrmd.html)
+[Assigment 1 ](https://pjournal.github.io/boun01-Cuneytttt/firstrmd.html)
 
-[Homework 2 ](https://pjournal.github.io/boun01-Cuneytttt/Assignment-22.html)
+[Assigment 2 ](https://pjournal.github.io/boun01-Cuneytttt/Assignment-22.html)
