@@ -1,0 +1,93 @@
+---
+title: "Assignment 2"
+author: "Cüneyt Çakır"
+output: 
+  html_document:
+    #css: styles.css
+    toc: true
+    toc_float: true
+date: "`r format(Sys.time(), '%d %B %Y')`"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.align = 'center', echo = TRUE)
+
+
+```
+## Day Ahead Market - DAM
+At each day, at Day Ahead Market, consumers (utilities, retailers, traders etc.) (e.g. CK Boğaziçi Elektrik, Enerjisa AYESAŞ) and producers (e.g. Enerjisa Üretim, Borusan Enbw) put orders (bids and offers) for the next day’s hourly electricity plan. They state quantity and price for each hour of the next day. Entering orders is finished at noon.
+These orders are processed in a clearing mechanism. Clearing mechanism provides next day’s consumption/production plan from matching offers and market prices. These prices are called Market Clearing Price - MCP (Piyasa Takas Fiyatı - PTF). Since there are 24 hours in a day, there are 24 MCPs.
+MCPs are settled in a single session and they do not change.
+
+### Intraday Market - IDM
+
+It is not expected to predict next day’s hourly consumption perfectly. Therefore, intraday market is introduced.
+Unlike DAM, there is continuous trading at IDM. It is much like a stock exchange. Prices can change in mere seconds or in higher frequency.
+It is an opportunity to correct participants forecasts by trading their excess or missing MWhs.
+Hourly weighted average prices are reported as Weighted Average Price - WAP (Ağırlıklı Ortalama Fiyat - AOF)
+
+### Balancing Power Market - BPM
+
+It can be thought as last minute sale/purchase of electricity to balance a participant’s account (i.e. electricity bought from market vs consumed electricity). BPM is not a market where participants actively trade electricity, it is just for balancing.
+Last minute purchase is always more expensive and last minute sale is always cheaper. Therefore, it is not (usually) desirable to be subject to BPM.
+If there is a system-wide need for extra electricity production (i.e. actual demand > predicted demand), then it is called an Enerji Deficit (Enerji Açığı). If the situation is the opposite (i.e. actual demand < predicted demand), then it is called an Energy Surplus (Enerji Fazlası).
+Market operator may order some electricity production facilities (i.e. hydro plants, natural gas plants) to increase or decrease production.
+A single price per hour is reported as a result of balancing. It is called System Marginal Price - SMP (Sistem Marjinal Fiyatı - SMF).
+SMP is always higher than MCP if system has Energy Deficit, and lower if there is Energy Surplus.
+Market operator also penalizes the operations in BPM by 3%. This is called Imbalance Price. Negative (Deficit) Imbalance Price is calculated as max(MCP,SMP)1.03 and Positive Imbalance Price is calculated as min(MCP,SMP)0.97.
+
+```{r electricity marke, include= FALSE}
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(tidyr)
+marketprice  <- read.csv("C:/Users/froze/OneDrive/Masaüstü/ödev datası.csv")
+```
+
+```{r electricity market}
+marketprice %>% glimpse()
+```
+```{r manipulation}
+prices <- marketprice %>% 
+  select(Date, MCP., SMP.) %>% 
+  mutate(Date = as.POSIXct(Date, format="%d.%m.%y %H:%M"))
+prices %>% glimpse()
+```
+```{r mcpvssmp}
+plotcomp1 <- prices %>% 
+  mutate(times_of_day = case_when(
+    lubridate::hour(Date) >= 1 & lubridate::hour(Date) <=8 ~ "00:00-08:59 ",
+    lubridate::hour(Date) >=9 & lubridate::hour(Date) <=16  ~ "09:00-16:59 ",
+    lubridate::hour(Date) == 0 || lubridate::hour(Date) >=17 & lubridate::hour(Date) <=23  ~ "17:00-23:59 "))  %>%
+  select(times_of_day, MCP., SMP.)
+
+```
+```{r mcpvssmp1}
+
+ggplot(plotcomp1,aes(x = MCP., y = SMP., color = times_of_day)) + 
+  geom_point() + 
+  xlim(125,450) + 
+  ylim(0,450) + 
+  theme_minimal() + 
+  labs(x="MCP", y="SMP", color="", title = "MCP vs SMP", subtitle = "Prices in July ") + 
+  theme(legend.position="right",axis.text.x = element_text(angle=45,hjust=1,vjust=1))
+```
+```{r dailysmp}
+plot_SMP <- prices %>% 
+  group_by(day = lubridate::day(Date)) %>% 
+  summarise(minimum_SMP = min(SMP.), mean_SMP = mean(SMP.), maximum_SMP = max(SMP.)) %>% 
+  ungroup() %>% 
+  mutate(range_SMP = maximum_SMP - minimum_SMP) %>% 
+  select(day, minimum_SMP, mean_SMP, maximum_SMP, range_SMP) 
+
+plot_SMP
+```
+```{r dailysmpplot}
+plot_SMP %>% 
+  select(day, minimum_SMP, mean_SMP, maximum_SMP) %>% 
+  pivot_longer(.,-day) %>% 
+  ggplot(.,aes(x=day, y=value, color=name)) + 
+  geom_line() + 
+  theme_test() + 
+  labs(x="July 2020", y="Price (TL/MWh)", color="Labels", title = "Max, Min and Mean of 'SMP'") + theme(legend.position="right")
+```
