@@ -1,0 +1,151 @@
+---
+title: "Assigment 3"
+author: "Cüneyt Çakır"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_depth: 4
+    number_sections: yes
+    theme: united
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Diamond Price Estimation
+
+## Introduction
+
+In India in the 4th century BC the earliest diamonds were found, while the youngest of these deposits was formed 900 million years ago. Most of these early stones were transported along the trade route network that linked India and China, commonly known as the Silk Road. Diamonds were admired at the time of their discovery for their strength and beauty, and for their ability to refract light and engrave metal. Diamonds were worn as ornamentation, used as cutting tools, acted as a talisman to defend against evil, and were thought to provide defense in war. Diamonds were also used as medicinal aid in the Dark Ages, and were believed when swallowed to cure disease and heal wounds.
+
+
+
+![](C:/Users/froze/OneDrive/Masaüstü/elmaslar.jpg)
+
+My assignment consists of finding the price of a diamond given its properties. I will use diamonds data set to estimate price of any diamond.
+
+### Package Load
+
+```{r}
+library(tidyverse) 
+library(ggplot2)
+library(dplyr)
+
+```
+
+library(rpart) 
+library(rpart.plot) 
+library(rattle) 
+library(FactoMineR)
+library(corrplot)
+
+
+
+```{r}
+
+str(diamonds)
+head(diamonds)
+summary(diamonds)
+
+```
+
+
+
+
+
+
+### Variables
+
+![](C:/Users/froze/OneDrive/Masaüstü/diamondchart.jpg)
+
+  Carat: Diamond weight, 200 mg equivalent (should be a good indicator)
+  
+  Cut: Quality of the cut
+  
+  Color: Diamond color from J to D (worst to best)
+  
+  Clarity: Clearity of Diamond; I1 (worst), SI2, SI1, VS2, VS1, VVS2, VVS1, IF (best)
+  
+  Depth: Total depth percentage (relative to x and y). Will likely be collinear.
+  
+  Table: Width of top of diamond relative to widest point (43--95)
+  
+  Price: US dollars ($)
+  
+  x, y, z: Dimensions of the diamond
+  
+  
+## Explanatory Data Analysis
+
+### Determining Diamond Price
+
+```{r count}
+ggplot(diamonds, aes(x=price)) + geom_histogram()+ggtitle("Quantity of Diamonds")+xlab("Quantity")+ylab("Price")
+
+```
+
+The graph above shows that how many diamonds in the dataset in terms of price.
+
+
+```{r}
+diamonds %>%
+  ggplot(aes(x=(price))) +
+  geom_histogram(stat="bin",binwidth= 500) +
+  facet_wrap(~cut, scales = "free")+
+  ggtitle("Change in price(Carat and Cut)")+xlab("Price")+ylab("Quantity")
+```
+
+Graph above shows number of diamonds with their "Cut"s in term of price.
+
+
+
+```{r variable changes}
+
+ggplot(diamonds, aes(x=carat, y=price, color=cut)) + geom_point()+
+  ggtitle("Change in price(Quantity and Cut)")+xlab("Price")+ylab("Quantity")
+
+```
+
+
+This helps us to examine the relationship of each of these variables, and how it affects the relationship between carat and price.
+
+
+
+```{r}
+
+ggplot(diamonds, aes(x=color, y=price)) + geom_boxplot() + scale_y_log10()+
+  ggtitle("Change in price(Color)")+xlab("Color")+ylab("Price")
+
+```
+
+The graph above, unlike the other graphs, we anaylzed the change of the price according to colors using histogram. This histogram shows the collapses more clearly.
+
+```{r, include=FALSE}
+new= 
+  diamonds %>%
+  group_by(color, cut) %>%
+  summarise(n=n()) %>%
+  group_by(cut) %>%
+  mutate(sum.n= sum(n)) %>%
+  ungroup() %>%
+  mutate(n2= n/sum.n) %>%
+  select(color, cut, n2)
+```
+
+
+```{r}
+new %>% spread(cut,n2)
+
+ggplot(new,aes(x=color, y=cut)) +
+  geom_tile(aes(fill=n2*100), colour = "white") +
+  scale_fill_gradient(low="white",high="black") +
+  labs(fill = "Density")+
+  ggtitle("Density Graph(Color and Cut)")+xlab("Color")+ylab("Cut")
+```
+
