@@ -4,4 +4,4 @@
 
 [Assigment 2 ](https://pjournal.github.io/boun01-Cuneytttt/Assignment-22.html)
 
-[Assigment 2 ](https://pjournal.github.io/boun01-Cuneytttt/Assignment3html.html)
+[Assigment 3 ](https://pjournal.github.io/boun01-Cuneytttt/Assignment3html.html)
